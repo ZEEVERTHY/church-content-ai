@@ -6,6 +6,31 @@ export async function POST(request) {
   try {
     console.log('🔍 Creating checkout session...')
     
+    // Check environment variables first
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.log('❌ STRIPE_SECRET_KEY not found in environment variables')
+      return NextResponse.json(
+        { error: 'Stripe configuration error: Secret key not found' }, 
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.STRIPE_PRICE_ID) {
+      console.log('❌ STRIPE_PRICE_ID not found in environment variables')
+      return NextResponse.json(
+        { error: 'Stripe configuration error: Price ID not found' }, 
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      console.log('❌ NEXT_PUBLIC_APP_URL not found in environment variables')
+      return NextResponse.json(
+        { error: 'App configuration error: App URL not found' }, 
+        { status: 500 }
+      )
+    }
+    
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
     console.log('🔍 Auth header exists:', !!authHeader)

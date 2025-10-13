@@ -10,6 +10,7 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <a href="/pricing" className="hidden sm:block text-indigo-600 hover:text-indigo-800 text-sm sm:text-base">Pricing</a>
+              <a href="/feedback" className="hidden sm:block text-indigo-600 hover:text-indigo-800 text-sm sm:text-base">Feedback</a>
               <a href="/auth" className="text-indigo-600 hover:text-indigo-800 text-sm sm:text-base">Sign In</a>
               <a href="/auth" className="bg-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-indigo-700 text-sm sm:text-base">
                 Get Started

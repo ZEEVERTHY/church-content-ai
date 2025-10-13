@@ -123,6 +123,12 @@ export default function Dashboard() {
                   Upgrade
                 </a>
               )}
+              <a
+                href="/feedback"
+                className="bg-green-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-green-700 text-xs sm:text-sm font-medium transition duration-200"
+              >
+                Feedback
+              </a>
               <div className="flex items-center space-x-2 sm:space-x-3">
                 {user.user_metadata?.avatar_url && (
                   <Image 
