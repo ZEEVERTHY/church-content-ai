@@ -83,7 +83,7 @@ export default function FeedbackPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You!</h2>
             <p className="text-gray-600 mb-6">
-              Your {formData.type} has been sent successfully. We'll get back to you as soon as possible.
+              Your {formData.type} has been sent successfully. We&apos;ll get back to you as soon as possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
