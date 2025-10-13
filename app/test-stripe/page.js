@@ -74,9 +74,9 @@ export default function TestStripePage() {
         <div className="mt-8 bg-yellow-50 p-6 rounded-lg">
           <h3 className="text-lg font-semibold mb-2">Instructions:</h3>
           <ol className="list-decimal list-inside space-y-2">
-            <li>Click "Test Stripe Configuration" to check if your environment variables are loaded</li>
+            <li>Click &quot;Test Stripe Configuration&quot; to check if your environment variables are loaded</li>
             <li>If the price ID is undefined, check your .env.local file</li>
-            <li>Click "Test Checkout Creation" to test if Stripe can create a checkout session</li>
+            <li>Click &quot;Test Checkout Creation&quot; to test if Stripe can create a checkout session</li>
             <li>Make sure you have a valid Stripe Price ID in your .env.local file</li>
           </ol>
         </div>

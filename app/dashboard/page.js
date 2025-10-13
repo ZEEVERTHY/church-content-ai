@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { hasActiveSubscription, getUserSubscription } from '../../lib/usageContext'
+import Image from 'next/image'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -124,9 +125,11 @@ export default function Dashboard() {
               )}
               <div className="flex items-center space-x-2 sm:space-x-3">
                 {user.user_metadata?.avatar_url && (
-                  <img 
+                  <Image 
                     src={user.user_metadata.avatar_url} 
                     alt="Profile"
+                    width={32}
+                    height={32}
                     className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                   />
                 )}
