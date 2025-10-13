@@ -34,37 +34,52 @@ export async function POST(request) {
       )
     }
 
-    // Check LIFETIME usage limits (3 total creations per user)
-    console.log('🔍 Checking usage for user:', user.id)
+    // Check if user has active subscription
+    console.log('🔍 Checking subscription status for user:', user.id)
     
-    const { data: usageData, error: usageError } = await supabase
-      .from('user_usage')
-      .select('*')
+    const { data: subscriptionData, error: subError } = await supabase
+      .from('user_subscriptions')
+      .select('status, current_period_end')
       .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single()
 
-    console.log('📊 Usage query result:', { usageData, usageError })
+    const hasActiveSub = subscriptionData && subscriptionData.current_period_end > Math.floor(Date.now() / 1000)
+    console.log('📊 Has active subscription:', hasActiveSub)
 
-    if (usageError) {
-      console.error('❌ Usage check error:', usageError)
-      return NextResponse.json(
-        { error: `Database error: ${usageError.message}` }, 
-        { status: 500 }
-      )
-    }
+    // If no active subscription, check usage limits
+    if (!hasActiveSub) {
+      console.log('🔍 Checking usage for user:', user.id)
+      
+      const { data: usageData, error: usageError } = await supabase
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', user.id)
 
-    const totalUsage = usageData?.length || 0
-    console.log('📊 Total lifetime usage:', totalUsage)
+      console.log('📊 Usage query result:', { usageData, usageError })
 
-    if (totalUsage >= 3) {
-      console.log('🛑 User has reached limit!')
-      return NextResponse.json(
-        { 
-          error: 'You have reached your limit of 3 total creations. Upgrade for unlimited access!',
-          totalUsage: totalUsage,
-          limitReached: true
-        }, 
-        { status: 403 }
-      )
+      if (usageError) {
+        console.error('❌ Usage check error:', usageError)
+        return NextResponse.json(
+          { error: `Database error: ${usageError.message}` }, 
+          { status: 500 }
+        )
+      }
+
+      const totalUsage = usageData?.length || 0
+      console.log('📊 Total lifetime usage:', totalUsage)
+
+      if (totalUsage >= 3) {
+        console.log('🛑 User has reached limit!')
+        return NextResponse.json(
+          { 
+            error: 'You have reached your limit of 3 total creations. Upgrade for unlimited access!',
+            totalUsage: totalUsage,
+            limitReached: true
+          }, 
+          { status: 403 }
+        )
+      }
     }
 
     const { topic, targetAudience, duration } = await request.json()
@@ -111,8 +126,9 @@ export async function POST(request) {
         success: true,
         content: result.content,
         usage: result.usage,
-        totalUsage: totalUsage + 1,
-        remainingCreations: 2 - totalUsage,
+        hasActiveSubscription: hasActiveSub,
+        totalUsage: hasActiveSub ? 'unlimited' : (totalUsage + 1),
+        remainingCreations: hasActiveSub ? 'unlimited' : (2 - totalUsage),
         debug: {
           usageTracked: !insertError,
           insertError: insertError?.message || null

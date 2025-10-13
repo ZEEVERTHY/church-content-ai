@@ -98,28 +98,28 @@ export default function Library() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <h1 className="text-2xl font-bold text-indigo-600">ChurchContentAI</h1>
-            <div className="flex items-center space-x-4">
-              <a href="/dashboard" className="text-gray-600 hover:text-indigo-600">← Dashboard</a>
-              <span className="text-gray-700 text-sm">{user?.user_metadata?.full_name || user?.email}</span>
+          <div className="flex justify-between items-center py-4 sm:py-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">ChurchContentAI</h1>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <a href="/dashboard" className="text-gray-600 hover:text-indigo-600 text-sm sm:text-base">← Dashboard</a>
+              <span className="text-gray-700 text-xs sm:text-sm hidden sm:block">{user?.user_metadata?.full_name || user?.email}</span>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Your Content Library</h2>
-            <p className="text-gray-600 mt-2">All your sermons and Bible studies in one place</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Content Library</h2>
+            <p className="text-sm sm:text-base text-gray-600 mt-2">All your sermons and Bible studies in one place</p>
           </div>
           
           {/* Filter Buttons */}
           <div className="flex space-x-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
                 filter === 'all'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -129,7 +129,7 @@ export default function Library() {
             </button>
             <button
               onClick={() => setFilter('sermon')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
                 filter === 'sermon'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -139,7 +139,7 @@ export default function Library() {
             </button>
             <button
               onClick={() => setFilter('study')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
                 filter === 'study'
                   ? 'bg-green-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -151,37 +151,37 @@ export default function Library() {
         </div>
 
         {filteredContent.length === 0 ? (
-          <div className="text-center py-16">
-            <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-12 sm:py-16">
+            <svg className="w-20 h-20 sm:w-24 sm:h-24 text-gray-300 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">No content yet</h3>
-            <p className="text-gray-500 mb-6">Start by creating your first sermon or Bible study</p>
-            <div className="flex justify-center space-x-4">
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">No content yet</h3>
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Start by creating your first sermon or Bible study</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
               <a
                 href="/generate-sermon"
-                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200"
+                className="bg-indigo-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm sm:text-base"
               >
                 Create Sermon
               </a>
               <a
                 href="/generate-study"
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200"
+                className="bg-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-green-700 transition duration-200 text-sm sm:text-base"
               >
                 Create Bible Study
               </a>
             </div>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Content List */}
             <div className="lg:col-span-1">
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto">
                 {filteredContent.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedContent(item)}
-                    className={`p-4 rounded-lg border cursor-pointer transition duration-200 ${
+                    className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition duration-200 ${
                       selectedContent?.id === item.id
                         ? 'border-indigo-500 bg-indigo-50'
                         : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -200,7 +200,7 @@ export default function Library() {
                             </span>
                           )}
                         </div>
-                        <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
+                        <h3 className="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2">
                           {item.title}
                         </h3>
                         <p className="text-xs text-gray-500">
