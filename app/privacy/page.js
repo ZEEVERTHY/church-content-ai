@@ -28,7 +28,7 @@ export default function Privacy() {
             <h2 className="text-xl font-semibold text-blue-900 mb-2">Quick Summary</h2>
             <p className="text-blue-800">
               We respect your privacy and are committed to protecting your personal information. 
-              We only collect what's necessary to provide our service, never sell your data, 
+              We only collect what&apos;s necessary to provide our service, never sell your data, 
               and give you full control over your information.
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function Privacy() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">7. International Users</h2>
             
             <p className="text-gray-700 mb-4">
-              If you're accessing our service from outside Nigeria, please note that your information 
+              If you&apos;re accessing our service from outside Nigeria, please note that your information 
               may be transferred to, stored, and processed in Nigeria where our servers are located.
             </p>
             
@@ -178,7 +178,7 @@ export default function Privacy() {
               <ul className="list-disc pl-4 text-blue-800 space-y-1">
                 <li>Right to access your personal data</li>
                 <li>Right to rectification of inaccurate data</li>
-                <li>Right to erasure ("right to be forgotten")</li>
+                <li>Right to erasure (&ldquo;right to be forgotten&rdquo;)</li>
                 <li>Right to data portability</li>
                 <li>Right to object to processing</li>
               </ul>
@@ -186,7 +186,7 @@ export default function Privacy() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Children's Privacy</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Children&apos;s Privacy</h2>
             
             <p className="text-gray-700">
               Our service is not intended for children under 13. We do not knowingly collect 
@@ -201,7 +201,7 @@ export default function Privacy() {
             
             <p className="text-gray-700 mb-4">
               We may update this Privacy Policy from time to time. We will notify you of any 
-              changes by posting the new Privacy Policy on this page and updating the "Last updated" 
+              changes by posting the new Privacy Policy on this page and updating the &ldquo;Last updated&rdquo; 
               date. We encourage you to review this Privacy Policy periodically for any changes.
             </p>
           </section>

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { getCurrentUsageCount, hasActiveSubscription } from '../../lib/usageContext'
@@ -29,9 +29,9 @@ export default function Dashboard() {
       }
     }
     getUser()
-  }, [router])
+  }, [router, loadUsageData])
 
-  const loadUsageData = async (userId) => {
+  const loadUsageData = useCallback(async (userId) => {
     try {
       const count = await getCurrentUsageCount(supabase, userId)
       setUsageCount(count)
@@ -52,7 +52,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const loadUserContent = async (userId) => {
     try {

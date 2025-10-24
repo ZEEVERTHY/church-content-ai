@@ -76,11 +76,11 @@ export default function About() {
                 </p>
                 <p>
                   Founded by a team of Christian technologists and ministry leaders, we understand the unique 
-                  challenges pastors face. We've seen firsthand how the demands of modern ministry can 
+                  challenges pastors face. We&apos;ve seen firsthand how the demands of modern ministry can 
                   overwhelm even the most dedicated servants of God.
                 </p>
                 <p>
-                  Our solution isn't to replace the pastor's voice or calling, but to amplify it. We provide 
+                  Our solution isn&apos;t to replace the pastor&apos;s voice or calling, but to amplify it. We provide 
                   AI-powered tools that serve as a research assistant, helping pastors prepare more effectively 
                   while preserving their unique spiritual insights and pastoral wisdom.
                 </p>
@@ -224,7 +224,7 @@ export default function About() {
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Get in Touch</h2>
             <p className="text-gray-600 mb-6">
-              Have questions about ChurchContentAI? We'd love to hear from you.
+              Have questions about ChurchContentAI? We&apos;d love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

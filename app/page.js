@@ -257,7 +257,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold text-gray-900">Sample Sermon Outline</h4>
-                    <p className="text-gray-600">Topic: "Faith in Difficult Times" | Romans 8:28</p>
+                    <p className="text-gray-600">Topic: &ldquo;Faith in Difficult Times&rdquo; | Romans 8:28</p>
                   </div>
                 </div>
                 
@@ -267,7 +267,7 @@ export default function Home() {
                     <p className="text-gray-600 text-sm">Every believer faces challenges, but God uses them for our growth...</p>
                   </div>
                   <div className="border-l-4 border-green-500 pl-4">
-                    <h5 className="font-semibold text-gray-900 mb-2">II. God's Purpose in Pain</h5>
+                    <h5 className="font-semibold text-gray-900 mb-2">II. God&apos;s Purpose in Pain</h5>
                     <p className="text-gray-600 text-sm">Romans 8:28 reminds us that God works all things together for good...</p>
                   </div>
                   <div className="border-l-4 border-purple-500 pl-4">
@@ -287,14 +287,14 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold text-gray-900">Sample Bible Study Guide</h4>
-                    <p className="text-gray-600">Topic: "The Fruit of the Spirit" | Galatians 5:22-23</p>
+                    <p className="text-gray-600">Topic: &ldquo;The Fruit of the Spirit&rdquo; | Galatians 5:22-23</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div className="bg-green-50 rounded-lg p-4">
                     <h5 className="font-semibold text-green-900 mb-2">Opening Discussion (10 min)</h5>
-                    <p className="text-green-800 text-sm">"What does it mean to live a Spirit-filled life?"</p>
+                    <p className="text-green-800 text-sm">&ldquo;What does it mean to live a Spirit-filled life?&rdquo;</p>
                   </div>
                   <div className="bg-blue-50 rounded-lg p-4">
                     <h5 className="font-semibold text-blue-900 mb-2">Scripture Study (20 min)</h5>
@@ -302,7 +302,7 @@ export default function Home() {
                   </div>
                   <div className="bg-purple-50 rounded-lg p-4">
                     <h5 className="font-semibold text-purple-900 mb-2">Application (15 min)</h5>
-                    <p className="text-purple-800 text-sm">"How can we cultivate these fruits in our daily lives?"</p>
+                    <p className="text-purple-800 text-sm">&ldquo;How can we cultivate these fruits in our daily lives?&rdquo;</p>
                   </div>
                 </div>
               </div>

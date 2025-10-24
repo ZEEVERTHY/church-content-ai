@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const ContentAnalytics = ({ userContent, usageStats }) => {
   const [analytics, setAnalytics] = useState(null)
@@ -8,9 +8,9 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
 
   useEffect(() => {
     generateAnalytics()
-  }, [userContent, usageStats, selectedPeriod])
+  }, [userContent, usageStats, selectedPeriod, generateAnalytics])
 
-  const generateAnalytics = async () => {
+  const generateAnalytics = useCallback(async () => {
     setIsLoading(true)
     
     // Simulate AI analysis
@@ -26,7 +26,7 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       setAnalytics(analysis)
       setIsLoading(false)
     }, 1500)
-  }
+  }, [userContent, usageStats, analyzePreachingPatterns, generateAnalyticsRecommendations])
 
   const analyzeContentPerformance = (content) => {
     if (!content || content.length === 0) {

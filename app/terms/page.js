@@ -27,7 +27,7 @@ export default function Terms() {
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold text-green-900 mb-2">Agreement Summary</h2>
             <p className="text-green-800">
-              By using ChurchContentAI, you agree to these terms. We've made them as clear and 
+              By using ChurchContentAI, you agree to these terms. We&apos;ve made them as clear and 
               fair as possible. If you have questions, please contact us.
             </p>
           </div>
@@ -36,8 +36,8 @@ export default function Terms() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
             
             <p className="text-gray-700 mb-4">
-              By accessing or using ChurchContentAI ("the Service"), you agree to be bound by these 
-              Terms of Service ("Terms"). If you disagree with any part of these terms, you may not 
+              By accessing or using ChurchContentAI (&quot;the Service&quot;), you agree to be bound by these 
+              Terms of Service (&quot;Terms&quot;). If you disagree with any part of these terms, you may not 
               access the Service.
             </p>
             
@@ -64,7 +64,7 @@ export default function Terms() {
               <p className="text-yellow-800">
                 ChurchContentAI is designed to assist pastors, not replace them. All AI-generated 
                 content should be reviewed, prayed over, and personalized with your own insights, 
-                experiences, and the Holy Spirit's guidance before use in ministry.
+                experiences, and the Holy Spirit&apos;s guidance before use in ministry.
               </p>
             </div>
           </section>

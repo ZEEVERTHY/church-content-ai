@@ -127,7 +127,7 @@ export default function Testimonials() {
 
                 {/* Quote */}
                 <blockquote className="text-gray-700 mb-6 leading-relaxed">
-                  "{testimonial.quote}"
+                  &ldquo;{testimonial.quote}&rdquo;
                 </blockquote>
 
                 {/* Results Badge */}
@@ -179,7 +179,7 @@ export default function Testimonials() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Pastor David's Story
+                Pastor David&apos;s Story
               </h3>
               <p className="text-gray-600 mb-4">
                 See how Pastor David transformed his sermon preparation and gained 6+ hours weekly for pastoral care.
@@ -196,7 +196,7 @@ export default function Testimonials() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Rev. Sarah's Journey
+                Rev. Sarah&apos;s Journey
               </h3>
               <p className="text-gray-600 mb-4">
                 Learn how Rev. Sarah balances bi-vocational ministry with quality sermon preparation.

@@ -230,7 +230,7 @@ export default function Support() {
             </h2>
             {filteredFaqs.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">No results found for "{searchQuery}"</p>
+                <p className="text-gray-500">No results found for &ldquo;{searchQuery}&rdquo;</p>
               </div>
             ) : (
               <div className="space-y-8">

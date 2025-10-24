@@ -156,7 +156,7 @@ const OnboardingModal = ({ isOpen, onClose, user }) => {
                   </div>
                   <div>
                     <h4 className="font-medium text-blue-900">Pray First</h4>
-                    <p className="text-blue-800 text-sm">Seek the Holy Spirit's guidance before and after</p>
+                    <p className="text-blue-800 text-sm">Seek the Holy Spirit&apos;s guidance before and after</p>
                   </div>
                 </div>
                 <div className="flex items-start">
