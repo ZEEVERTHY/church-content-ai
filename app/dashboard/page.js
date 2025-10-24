@@ -18,33 +18,34 @@ export default function Dashboard() {
   const [userContent, setUserContent] = useState([])
   const router = useRouter()
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        console.log('🔍 Dashboard: Checking authentication...')
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error('❌ Auth session error:', error)
-          router.push('/auth')
-          return
+  const loadUserContent = async (userId) => {
+    try {
+      // Simulate loading user content
+      const mockContent = [
+        {
+          id: 1,
+          title: "Faith in Difficult Times",
+          type: "sermon",
+          topic: "faith",
+          style: "conversational",
+          length: "medium",
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          title: "The Fruit of the Spirit",
+          type: "study",
+          topic: "spiritual growth",
+          style: "expository",
+          length: "long",
+          created_at: new Date().toISOString()
         }
-        
-        if (session && session.user) {
-          console.log('✅ User authenticated:', session.user.email)
-          setUser(session.user)
-          await loadUsageData(session.user.id)
-        } else {
-          console.log('❌ No active session, redirecting to auth')
-          router.push('/auth')
-        }
-      } catch (error) {
-        console.error('❌ Dashboard auth error:', error)
-        router.push('/auth')
-      }
+      ]
+      setUserContent(mockContent)
+    } catch (error) {
+      console.error('Error loading user content:', error)
     }
-    getUser()
-  }, [router, loadUsageData])
+  }
 
   const loadUsageData = useCallback(async (userId) => {
     try {
@@ -76,36 +77,33 @@ export default function Dashboard() {
     }
   }, [])
 
-  const loadUserContent = async (userId) => {
-    try {
-      // Simulate loading user content
-      const mockContent = [
-        {
-          id: 1,
-          title: "Faith in Difficult Times",
-          type: "sermon",
-          topic: "faith",
-          style: "conversational",
-          length: "medium",
-          status: "completed",
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: 2,
-          title: "The Fruit of the Spirit",
-          type: "study",
-          topic: "spiritual growth",
-          style: "expository",
-          length: "long",
-          status: "completed",
-          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        console.log('🔍 Dashboard: Checking authentication...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('❌ Auth session error:', error)
+          router.push('/auth')
+          return
         }
-      ]
-      setUserContent(mockContent)
-    } catch (error) {
-      console.error('Error loading user content:', error)
+        
+        if (session && session.user) {
+          console.log('✅ User authenticated:', session.user.email)
+          setUser(session.user)
+          await loadUsageData(session.user.id)
+        } else {
+          console.log('❌ No active session, redirecting to auth')
+          router.push('/auth')
+        }
+      } catch (error) {
+        console.error('❌ Dashboard auth error:', error)
+        router.push('/auth')
+      }
     }
-  }
+    getUser()
+  }, [router, loadUsageData])
 
 
   const remainingCreations = Math.max(0, 3 - usageCount)

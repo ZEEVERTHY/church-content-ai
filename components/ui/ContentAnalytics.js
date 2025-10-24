@@ -6,10 +6,6 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    generateAnalytics()
-  }, [userContent, usageStats, selectedPeriod, generateAnalytics])
-
   const generateAnalytics = useCallback(async () => {
     setIsLoading(true)
     
@@ -26,7 +22,11 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       setAnalytics(analysis)
       setIsLoading(false)
     }, 1500)
-  }, [userContent, usageStats, analyzePreachingPatterns, generateAnalyticsRecommendations])
+  }, [userContent, usageStats])
+
+  useEffect(() => {
+    generateAnalytics()
+  }, [userContent, usageStats, selectedPeriod, generateAnalytics])
 
   const analyzeContentPerformance = (content) => {
     if (!content || content.length === 0) {
