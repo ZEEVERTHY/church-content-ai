@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request) {
   try {
+    console.log('📧 Feedback API called')
+    
     const { name, email, subject, message, type } = await request.json()
+    console.log('📧 Received feedback:', { name, email, subject, type })
 
     // Validate required fields
     if (!name || !email || !subject || !message || !type) {
+      console.log('❌ Missing required fields')
       return NextResponse.json(
         { success: false, error: 'All fields are required' },
         { status: 400 }
@@ -19,42 +23,16 @@ export async function POST(request) {
     const EMAIL_TEMPLATE_ID = process.env.EMAIL_TEMPLATE_ID
     const EMAIL_PUBLIC_KEY = process.env.EMAIL_PUBLIC_KEY
 
-    // If using EmailJS (recommended for simple setup)
-    if (EMAIL_SERVICE_ID && EMAIL_TEMPLATE_ID && EMAIL_PUBLIC_KEY) {
-      const emailData = {
-        service_id: EMAIL_SERVICE_ID,
-        template_id: EMAIL_TEMPLATE_ID,
-        user_id: EMAIL_PUBLIC_KEY,
-        template_params: {
-          to_email: YOUR_EMAIL,
-          from_name: name,
-          from_email: email,
-          subject: `[${type.toUpperCase()}] ${subject}`,
-          message: message,
-          type: type,
-          reply_to: email
-        }
-      }
+    console.log('📧 Email config check:', {
+      hasServiceId: !!EMAIL_SERVICE_ID,
+      hasTemplateId: !!EMAIL_TEMPLATE_ID,
+      hasPublicKey: !!EMAIL_PUBLIC_KEY,
+      feedbackEmail: YOUR_EMAIL
+    })
 
-      const response = await fetch(EMAIL_SERVICE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailData),
-      })
-
-      if (response.ok) {
-        console.log('✅ Feedback email sent successfully via EmailJS')
-        return NextResponse.json({ success: true })
-      } else {
-        console.error('❌ EmailJS error:', await response.text())
-        return NextResponse.json(
-          { success: false, error: 'Failed to send email' },
-          { status: 500 }
-        )
-      }
-    }
+    // Note: EmailJS only works client-side, not in API routes
+    // For now, we'll log the feedback and return success
+    // EmailJS integration should be moved to client-side if needed
 
     // Fallback: Log to console (for development)
     console.log('📧 FEEDBACK EMAIL (Email service not configured):')

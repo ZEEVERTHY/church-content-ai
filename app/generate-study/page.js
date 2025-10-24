@@ -2,15 +2,17 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
-import { getCurrentUsageCount, hasReachedLimit, notifyUsageUpdate } from '../../lib/usageContext'
+import { getCurrentUsageCount, notifyUsageUpdate } from '../../lib/usageContext'
+import GeneratePageLayout from '../../components/layout/GeneratePageLayout'
+import BackButton from '../../components/ui/BackButton'
 
 export default function GenerateStudy() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     topic: '',
-    targetAudience: 'adults',
-    duration: '45 minutes'
+    audience: 'adults',
+    duration: '60'
   })
   const [generatedContent, setGeneratedContent] = useState('')
   const [error, setError] = useState('')
@@ -22,7 +24,6 @@ export default function GenerateStudy() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setUser(session.user)
-        // Get current usage count
         const count = await getCurrentUsageCount(supabase, session.user.id)
         setRemainingCreations(Math.max(0, 3 - count))
       } else {
@@ -32,7 +33,6 @@ export default function GenerateStudy() {
     getUser()
   }, [router])
 
-  // Listen for usage updates from other parts of the app
   useEffect(() => {
     const handleUsageUpdate = async () => {
       if (user) {
@@ -52,295 +52,236 @@ export default function GenerateStudy() {
     })
   }
 
-  const generateStudy = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setGeneratedContent('')
 
     try {
-      console.log('Frontend: Getting session token...')
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        setError('Please sign in to generate content')
-        setLoading(false)
-        return
-      }
-
-      console.log('Frontend: Session token exists:', !!session.access_token)
-      console.log('Frontend: Sending request to generate study...')
-      
       const response = await fetch('/api/generate-outline', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       })
 
       const data = await response.json()
 
-      if (data.success) {
-        setGeneratedContent(data.content)
-        // Update remaining creations immediately
-        const newCount = await getCurrentUsageCount(supabase, session.user.id)
-        setRemainingCreations(Math.max(0, 3 - newCount))
-        // Notify other components
-        notifyUsageUpdate()
-      } else {
-        setError(data.error || 'Failed to generate study outline')
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate study')
       }
+
+      setGeneratedContent(data.outline)
+      notifyUsageUpdate()
     } catch (error) {
-      console.error('Network error:', error)
-      setError('Network error. Please try again.')
+      console.error('Error generating study:', error)
+      setError(error.message || 'Failed to generate study. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const saveToLibrary = async () => {
-    if (!generatedContent) return
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        alert('Please sign in to save content')
-        return
-      }
-
-      const response = await fetch('/api/save-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          title: `Bible Study: ${formData.topic}`,
-          content: generatedContent,
-          content_type: 'study',
-          topic: formData.topic,
-          bible_verse: '',
-          style: formData.targetAudience
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        alert('Study saved to your library!')
-      } else {
-        alert('Error saving study: ' + data.error)
-      }
-    } catch (error) {
-      console.error('Save error:', error)
-      alert('Error saving study')
-    }
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
-  }
+  const isLimitReached = remainingCreations <= 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">ChurchContentAI</h1>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <a href="/dashboard" className="text-gray-600 hover:text-indigo-600 text-sm sm:text-base">← Dashboard</a>
-              <div className="text-xs sm:text-sm text-gray-500 hidden sm:block">
-                {remainingCreations > 0 ? (
-                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs sm:text-sm">
-                    {remainingCreations} left
-                  </span>
-                ) : (
-                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs sm:text-sm">
-                    Limit reached
-                  </span>
-                )}
+    <GeneratePageLayout>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <BackButton href="/dashboard" className="mb-4">
+            Back to Dashboard
+          </BackButton>
+        </div>
+        
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Bible Study Preparation Assistant</h2>
+          <p className="text-lg text-gray-600 mt-4">Let AI help you create structured Bible study guides, then add your teaching style and pastoral insights</p>
+          
+          {/* Pastor-focused guidance */}
+          <div className="mt-6 max-w-3xl mx-auto">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-start">
+                <div className="shrink-0">
+                  <svg className="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">Pastor&apos;s Note</h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Use AI-generated study outlines as a foundation, then customize them with your teaching approach, group dynamics, and the specific needs of your congregation.
+                  </p>
+                </div>
               </div>
-              <span className="text-gray-700 text-xs sm:text-sm hidden sm:block">{user.user_metadata?.full_name || user.email}</span>
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Bible Study Generator</h2>
-          <p className="text-lg sm:text-xl text-gray-600 px-4">Create engaging, interactive Bible study outlines</p>
+        {/* Usage Status */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {remainingCreations} generations remaining
+                </h3>
+                <p className="text-gray-600">
+                  {isLimitReached 
+                    ? 'Upgrade to Premium for unlimited generations' 
+                    : 'Free plan includes 3 generations per month'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
-          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg">
-            <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Study Details</h3>
-            
-            <form onSubmit={generateStudy} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Study Topic *
-                </label>
-                <input
-                  type="text"
-                  name="topic"
-                  value={formData.topic}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Prayer, Forgiveness, Leadership, Discipleship"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Study Details</h3>
+              <p className="text-gray-600">Provide the topic and details for your Bible study</p>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Target Audience
-                </label>
-                <select
-                  name="targetAudience"
-                  value={formData.targetAudience}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="adults">Adults</option>
-                  <option value="young adults">Young Adults (18-30)</option>
-                  <option value="teenagers">Teenagers (13-17)</option>
-                  <option value="families">Families with Children</option>
-                  <option value="seniors">Seniors (65+)</option>
-                  <option value="new believers">New Believers</option>
-                  <option value="small group">Small Group</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Study Duration
-                </label>
-                <select
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="30 minutes">30 minutes</option>
-                  <option value="45 minutes">45 minutes</option>
-                  <option value="60 minutes">1 hour</option>
-                  <option value="90 minutes">1.5 hours</option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !formData.topic || remainingCreations <= 0}
-                className="w-full bg-green-600 text-white py-4 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium text-lg transition duration-200"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                    Generating Study Outline...
-                  </>
-                ) : remainingCreations <= 0 ? (
-                  'Creation Limit Reached'
-                ) : (
-                  'Generate Bible Study'
-                )}
-              </button>
-            </form>
-
-            {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex">
-                  <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-red-700 text-sm">{error}</p>
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Study Topic *
+                  </label>
+                  <input
+                    type="text"
+                    name="topic"
+                    value={formData.topic}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="e.g., The Fruit of the Spirit"
+                  />
                 </div>
-              </div>
-            )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Audience
+                  </label>
+                  <select
+                    name="audience"
+                    value={formData.audience}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="adults">Adults</option>
+                    <option value="youth">Youth</option>
+                    <option value="children">Children</option>
+                    <option value="mixed">Mixed Ages</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Study Duration (minutes)
+                  </label>
+                  <select
+                    name="duration"
+                    value={formData.duration}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="30">30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="90">90 minutes</option>
+                  </select>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || isLimitReached}
+                  className={`w-full py-2 px-4 rounded-md font-medium ${
+                    loading || isLimitReached
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </div>
+                  ) : isLimitReached ? (
+                    'Upgrade Required'
+                  ) : (
+                    'Generate Study'
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
 
-          {/* Results */}
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <h3 className="text-xl font-semibold mb-6">Your Bible Study Outline</h3>
-            
-            {loading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Creating your study outline...</p>
-                <p className="text-sm text-gray-500 mt-2">This usually takes 15-30 seconds</p>
-              </div>
-            )}
-            
-            {generatedContent && !loading && (
-              <div className="space-y-6">
-                <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <div className="prose prose-sm max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
-                      {generatedContent}
-                    </pre>
+          {/* Generated Content */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Generated Study</h3>
+              <p className="text-gray-600">Your AI-generated Bible study outline will appear here</p>
+            </div>
+
+            <div className="p-6">
+              {generatedContent ? (
+                <div className="prose prose-sm max-w-none">
+                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                    {generatedContent}
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedContent)
-                      alert('Study outline copied to clipboard!')
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition duration-200"
-                  >
-                    Copy to Clipboard
-                  </button>
-                  <button
-                    onClick={saveToLibrary}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium transition duration-200"
-                  >
-                    Save to Library
-                  </button>
-                  <button
-                    onClick={() => {
-                      const blob = new Blob([generatedContent], { type: 'text/plain' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `bible-study-${formData.topic.replace(/\s+/g, '-').toLowerCase()}.txt`
-                      document.body.appendChild(a)
-                      a.click()
-                      document.body.removeChild(a)
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium transition duration-200"
-                  >
-                    Download
-                  </button>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500">Fill out the form and click &quot;Generate Study&quot; to create your outline</p>
                 </div>
-              </div>
-            )}
-
-            {!generatedContent && !loading && (
-              <div className="text-center py-12">
-                <svg className="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-500 text-lg">Fill out the form and click Generate Bible Study</p>
-                <p className="text-gray-400 text-sm mt-2">Your AI-generated study outline will appear here</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Upgrade Prompt */}
+        {isLimitReached && (
+          <div className="mt-8 bg-white rounded-lg shadow p-8 text-center">
+            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Upgrade to Premium</h3>
+            <p className="text-gray-600 mb-6">
+              Get unlimited Bible study generations for just ₦5,000/month
+            </p>
+            <button 
+              onClick={() => router.push('/pricing')}
+              className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium"
+            >
+              Upgrade Now
+            </button>
+          </div>
+        )}
       </main>
-    </div>
+    </GeneratePageLayout>
   )
 }

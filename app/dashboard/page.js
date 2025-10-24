@@ -1,302 +1,233 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
-import { hasActiveSubscription, getUserSubscription } from '../../lib/usageContext'
+import { getCurrentUsageCount, hasActiveSubscription } from '../../lib/usageContext'
+import Layout from '../../components/layout/Layout'
+import { DashboardSkeleton } from '../../components/ui/SkeletonLoader'
+import OnboardingModal from '../../components/ui/OnboardingModal'
+import ContentAnalytics from '../../components/ui/ContentAnalytics'
 import Image from 'next/image'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [usageCount, setUsageCount] = useState(0)
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [userContent, setUserContent] = useState([])
   const router = useRouter()
 
-  const [totalUsageCount, setTotalUsageCount] = useState(0)
-  const [subscription, setSubscription] = useState(null)
-  const [hasActiveSub, setHasActiveSub] = useState(false)
-
   useEffect(() => {
-    // Check if user is logged in
-    const getSession = async () => {
-      console.log('🔍 Dashboard: Checking session...')
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      console.log('📊 Session data:', session)
-      console.log('❌ Session error:', error)
-      
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        console.log('✅ User is logged in:', session.user.email)
         setUser(session.user)
-        loadTotalUsageCount(session.user.id)
-        loadSubscriptionStatus(session.user.id)
+        await loadUsageData(session.user.id)
       } else {
-        console.log('❌ No session found, redirecting to auth...')
-        // If not logged in, redirect to auth page
         router.push('/auth')
       }
-      setLoading(false)
     }
-
-    getSession()
+    getUser()
   }, [router])
 
-  const loadTotalUsageCount = async (userId) => {
+  const loadUsageData = async (userId) => {
     try {
-      // Get total lifetime usage
-      const { data, error } = await supabase
-        .from('user_usage')
-        .select('id')
-        .eq('user_id', userId)
+      const count = await getCurrentUsageCount(supabase, userId)
+      setUsageCount(count)
+      
+      const hasSubscription = await hasActiveSubscription(supabase, userId)
+      setSubscriptionStatus(hasSubscription)
 
-      if (error) {
-        console.error('Error loading total usage count:', error)
-      } else {
-        setTotalUsageCount(data?.length || 0)
+      // Load user content for analytics
+      await loadUserContent(userId)
+
+      // Check if user needs onboarding
+      const onboardingCompleted = localStorage.getItem('onboardingCompleted')
+      if (!onboardingCompleted && count === 0) {
+        setShowOnboarding(true)
       }
     } catch (error) {
-      console.error('Error loading total usage count:', error)
+      console.error('Error loading usage data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const loadSubscriptionStatus = async (userId) => {
+  const loadUserContent = async (userId) => {
     try {
-      // For now, skip subscription check to avoid 406 error
-      // TODO: Implement this after database schema is set up
-      console.log('🔍 Skipping subscription check for now')
-      setHasActiveSub(false)
-      setSubscription(null)
+      // Simulate loading user content
+      const mockContent = [
+        {
+          id: 1,
+          title: "Faith in Difficult Times",
+          type: "sermon",
+          topic: "faith",
+          style: "conversational",
+          length: "medium",
+          status: "completed",
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        },
+        {
+          id: 2,
+          title: "The Fruit of the Spirit",
+          type: "study",
+          topic: "spiritual growth",
+          style: "expository",
+          length: "long",
+          status: "completed",
+          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+        }
+      ]
+      setUserContent(mockContent)
     } catch (error) {
-      console.error('Error loading subscription status:', error)
+      console.error('Error loading user content:', error)
     }
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
+
+  const remainingCreations = Math.max(0, 3 - usageCount)
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
+      <Layout requireAuth={true}>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <DashboardSkeleton />
+        </main>
+      </Layout>
     )
   }
 
-  if (!user) {
-    return null // Will redirect to auth page
-  }
-
-  const remainingCreations = hasActiveSub ? 'unlimited' : (3 - totalUsageCount)
-  const isLimitReached = !hasActiveSub && totalUsageCount >= 3
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">ChurchContentAI</h1>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="text-xs sm:text-sm text-gray-500 hidden sm:block">
-                {hasActiveSub ? (
-                  <span className="bg-green-100 text-green-700 px-2 py-1 sm:px-3 sm:py-2 rounded-full font-medium text-xs sm:text-sm">
-                    ✅ Premium Active
-                  </span>
-                ) : !isLimitReached ? (
-                  <span className="bg-green-100 text-green-700 px-2 py-1 sm:px-3 sm:py-2 rounded-full font-medium text-xs sm:text-sm">
-                    ✅ {remainingCreations} remaining
-                  </span>
-                ) : (
-                  <span className="bg-red-100 text-red-700 px-2 py-1 sm:px-3 sm:py-2 rounded-full font-medium text-xs sm:text-sm">
-                    ⛔ Limit reached
-                  </span>
-                )}
+    <Layout requireAuth={true}>
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onClose={() => setShowOnboarding(false)}
+        user={user}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+            Welcome back, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pastor'}!
+          </h2>
+          <p className="text-lg text-gray-600 mt-4">Let AI assist you in creating meaningful content for your ministry</p>
+          
+          {/* Pastor-focused reminder */}
+          <div className="mt-6 max-w-2xl mx-auto">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-center justify-center mb-2">
+                <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-blue-800">Remember</span>
               </div>
-              {!hasActiveSub && (
-                <a
-                  href="/pricing"
-                  className="bg-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-indigo-700 text-xs sm:text-sm font-medium transition duration-200"
-                >
-                  Upgrade
-                </a>
-              )}
-              <a
-                href="/feedback"
-                className="bg-green-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-green-700 text-xs sm:text-sm font-medium transition duration-200"
-              >
-                Feedback
-              </a>
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                {user.user_metadata?.avatar_url && (
-                  <Image 
-                    src={user.user_metadata.avatar_url} 
-                    alt="Profile"
-                    width={32}
-                    height={32}
-                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
-                  />
-                )}
-                <span className="text-gray-700 text-xs sm:text-sm hidden sm:block">
-                  Welcome, {user.user_metadata?.full_name || user.email}!
-                </span>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="bg-gray-200 text-gray-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-300 text-xs sm:text-sm"
-              >
-                Sign Out
-              </button>
+              <p className="text-sm text-blue-700">
+                AI is here to support your calling, not replace your pastoral wisdom. Use these tools as a starting point, then add your personal insights and the Holy Spirit&apos;s guidance.
+              </p>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Your Content Dashboard</h2>
-          <p className="text-lg sm:text-xl text-gray-600 px-4">Create amazing content for your ministry</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-2 px-4">
-            {hasActiveSub ? (
-              <span className="text-green-600 font-medium">Premium Plan - Unlimited Access</span>
-            ) : (
-              `Free Plan: ${totalUsageCount}/3 creations used`
-            )}
-          </p>
-        </div>
-
-        {/* Action Cards - Only 2 cards now, no library */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto px-4">
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2">Generate Sermon</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
-              Create a complete sermon from a Bible verse or topic
-            </p>
-            <button 
-              onClick={() => router.push('/generate-sermon')}
-              disabled={isLimitReached}
-              className={`w-full py-3 rounded-lg transition duration-200 text-sm sm:text-base ${
-                isLimitReached
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate Sermon</h3>
+            <p className="text-gray-600 mb-6">Create inspiring sermon outlines with AI assistance</p>
+            <a
+              href="/generate-sermon"
+              className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors"
             >
-              {isLimitReached ? '⛔ Limit Reached' : hasActiveSub ? 'Create Unlimited' : 'Start Creating'}
-            </button>
+              Start Creating
+            </a>
           </div>
 
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2">Bible Study Generator</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
-              Build structured Bible study outlines and teaching materials
-            </p>
-            <button 
-              onClick={() => router.push('/generate-study')}
-              disabled={isLimitReached}
-              className={`w-full py-3 rounded-lg transition duration-200 text-sm sm:text-base ${
-                isLimitReached
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate Bible Study</h3>
+            <p className="text-gray-600 mb-6">Create engaging Bible study outlines with AI assistance</p>
+            <a
+              href="/generate-study"
+              className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium transition-colors"
             >
-              {isLimitReached ? '⛔ Limit Reached' : hasActiveSub ? 'Create Unlimited' : 'Create Study Outline'}
-            </button>
+              Start Creating
+            </a>
           </div>
         </div>
 
         {/* Usage Statistics */}
-        <div className="mt-12 sm:mt-16 max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Usage Statistics</h3>
-            <div className="flex items-center justify-center space-x-6 sm:space-x-8 mb-4 sm:mb-6">
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-600">{totalUsageCount}</div>
-                <div className="text-gray-500 text-xs sm:text-sm">Total Created</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${hasActiveSub ? 'text-green-600' : (remainingCreations > 0 ? 'text-green-600' : 'text-red-600')}`}>
-                  {hasActiveSub ? '∞' : remainingCreations}
-                </div>
-                <div className="text-gray-500 text-xs sm:text-sm">{hasActiveSub ? 'Unlimited' : 'Remaining'}</div>
-              </div>
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">Your Usage</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-indigo-600 mb-2">{usageCount}</div>
+              <div className="text-gray-600">Total Generations</div>
             </div>
             
-            {/* Progress Bar - Only show for free users */}
-            {!hasActiveSub && (
-              <div className="mb-4">
-                <div className="bg-gray-200 rounded-full h-3 sm:h-4">
-                  <div 
-                    className={`h-3 sm:h-4 rounded-full transition-all duration-300 ${
-                      isLimitReached ? 'bg-red-500' : 'bg-indigo-600'
-                    }`}
-                    style={{ width: `${(totalUsageCount / 3) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs sm:text-sm text-gray-500 mt-2">
-                  <span>0 creations</span>
-                  <span>3 creations (limit)</span>
-                </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">{remainingCreations}</div>
+              <div className="text-gray-600">Remaining This Month</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {subscriptionStatus ? 'Premium' : 'Free'}
               </div>
-            )}
-
-            {/* Status Messages */}
-            {hasActiveSub ? (
-              <div className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-green-800 text-sm sm:text-base">
-                    <span className="font-medium">Premium Active!</span> You have unlimited access to all features. 
-                    {subscription && (
-                      <span className="block text-xs sm:text-sm mt-1">
-                        Next billing: {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            ) : isLimitReached ? (
-              <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-red-800 text-sm sm:text-base">
-                    <span className="font-medium">Creation limit reached!</span> You have used all 3 of your free creations. 
-                    <a href="/pricing" className="underline ml-1">Upgrade your account for unlimited access.</a>
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-blue-800 text-sm sm:text-base">
-                    You have <span className="font-medium">{remainingCreations} creation{remainingCreations !== 1 ? 's' : ''} remaining</span> in your free account.
-                    <a href="/pricing" className="underline ml-1">Upgrade for unlimited access.</a>
-                  </p>
-                </div>
-              </div>
-            )}
+              <div className="text-gray-600">Current Plan</div>
+            </div>
           </div>
         </div>
+
+        {/* Content Analytics */}
+        <div className="mb-8">
+          <ContentAnalytics 
+            userContent={userContent} 
+            usageStats={{ totalGenerations: usageCount }}
+          />
+        </div>
+
+        {/* Status Messages */}
+        {subscriptionStatus ? (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-green-800">Premium Active</h3>
+            </div>
+            <p className="text-green-700">You have unlimited access to all features!</p>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-blue-800">Free Plan</h3>
+            </div>
+            <p className="text-blue-700 mb-4">
+              You have {remainingCreations} generations remaining this month
+            </p>
+            <a
+              href="/pricing"
+              className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+            >
+              Upgrade to Premium
+            </a>
+          </div>
+        )}
       </main>
-    </div>
+    </Layout>
   )
 }
