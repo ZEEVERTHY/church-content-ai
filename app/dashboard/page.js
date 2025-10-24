@@ -20,11 +20,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        setUser(session.user)
-        await loadUsageData(session.user.id)
-      } else {
+      try {
+        console.log('🔍 Dashboard: Checking authentication...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('❌ Auth session error:', error)
+          router.push('/auth')
+          return
+        }
+        
+        if (session && session.user) {
+          console.log('✅ User authenticated:', session.user.email)
+          setUser(session.user)
+          await loadUsageData(session.user.id)
+        } else {
+          console.log('❌ No active session, redirecting to auth')
+          router.push('/auth')
+        }
+      } catch (error) {
+        console.error('❌ Dashboard auth error:', error)
         router.push('/auth')
       }
     }
@@ -33,22 +48,29 @@ export default function Dashboard() {
 
   const loadUsageData = useCallback(async (userId) => {
     try {
+      console.log('🔍 Loading usage data for user:', userId)
+      
       const count = await getCurrentUsageCount(supabase, userId)
+      console.log('📊 Usage count:', count)
       setUsageCount(count)
       
       const hasSubscription = await hasActiveSubscription(supabase, userId)
+      console.log('💳 Has subscription:', hasSubscription)
       setSubscriptionStatus(hasSubscription)
 
       // Load user content for analytics
       await loadUserContent(userId)
 
       // Check if user needs onboarding
-      const onboardingCompleted = localStorage.getItem('onboardingCompleted')
-      if (!onboardingCompleted && count === 0) {
-        setShowOnboarding(true)
+      if (typeof window !== 'undefined') {
+        const onboardingCompleted = localStorage.getItem('onboardingCompleted')
+        if (!onboardingCompleted && count === 0) {
+          setShowOnboarding(true)
+        }
       }
     } catch (error) {
-      console.error('Error loading usage data:', error)
+      console.error('❌ Error loading usage data:', error)
+      // Don't redirect on usage data errors, just log them
     } finally {
       setLoading(false)
     }
