@@ -22,7 +22,7 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       setAnalytics(analysis)
       setIsLoading(false)
     }, 1500)
-  }, [userContent, usageStats])
+  }, [userContent, usageStats, analyzePreachingPatterns, generateAnalyticsRecommendations])
 
   useEffect(() => {
     generateAnalytics()
@@ -96,7 +96,7 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       .slice(0, 5)
   }
 
-  const analyzePreachingPatterns = (content) => {
+  const analyzePreachingPatterns = useCallback((content) => {
     if (!content || content.length === 0) {
       return {
         preferredStyle: 'conversational',
@@ -123,9 +123,9 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       averageLength: Object.keys(lengthCounts).reduce((a, b) => lengthCounts[a] > lengthCounts[b] ? a : b),
       commonThemes: analyzeTopicTrends(content).slice(0, 3).map(t => t.topic)
     }
-  }
+  }, [])
 
-  const generateAnalyticsRecommendations = (content) => {
+  const generateAnalyticsRecommendations = useCallback((content) => {
     const recommendations = []
     
     if (!content || content.length === 0) {
@@ -166,7 +166,7 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
     })
 
     return recommendations
-  }
+  }, [analyzePreachingPatterns])
 
   const calculateGrowthInsights = (content, stats) => {
     const insights = []

@@ -55,10 +55,15 @@ export default function GenerateSermon() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Immediate UI updates for better perceived performance
     setLoading(true)
     setError('')
     setGeneratedContent('')
-
+    
+    // Show optimistic loading message immediately
+    setGeneratedContent('🤖 AI is crafting your sermon... This usually takes 10-15 seconds.')
+    
     try {
       const response = await fetch('/api/generate-sermon', {
         method: 'POST',
@@ -75,11 +80,13 @@ export default function GenerateSermon() {
         throw new Error(data.error || 'Failed to generate sermon')
       }
 
+      // Immediate content update
       setGeneratedContent(data.content)
       notifyUsageUpdate()
     } catch (error) {
       console.error('Error generating sermon:', error)
       setError(error.message || 'Failed to generate sermon. Please try again.')
+      setGeneratedContent('') // Clear optimistic content on error
     } finally {
       setLoading(false)
     }
@@ -226,16 +233,16 @@ export default function GenerateSermon() {
                 <button
                   type="submit"
                   disabled={loading || isLimitReached}
-                  className={`w-full py-2 px-4 rounded-md font-medium ${
+                  className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
                     loading || isLimitReached
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 active:scale-95'
                   }`}
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating...
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Generating...</span>
                     </div>
                   ) : isLimitReached ? (
                     'Upgrade Required'
@@ -257,7 +264,7 @@ export default function GenerateSermon() {
             <div className="p-6">
               {generatedContent ? (
                 <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed animate-fadeIn">
                     {generatedContent}
                   </div>
                 </div>
