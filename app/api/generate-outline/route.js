@@ -47,6 +47,9 @@ export async function POST(request) {
     const hasActiveSub = subscriptionData && subscriptionData.current_period_end > Math.floor(Date.now() / 1000)
     console.log('📊 Has active subscription:', hasActiveSub)
 
+    // Initialize totalUsage variable
+    let totalUsage = 0
+
     // If no active subscription, check usage limits
     if (!hasActiveSub) {
       console.log('🔍 Checking usage for user:', user.id)
@@ -66,7 +69,7 @@ export async function POST(request) {
         )
       }
 
-      const totalUsage = usageData?.length || 0
+      totalUsage = usageData?.length || 0
       console.log('📊 Total lifetime usage:', totalUsage)
 
       if (totalUsage >= 3) {

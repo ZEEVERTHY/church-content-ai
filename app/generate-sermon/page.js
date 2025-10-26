@@ -75,7 +75,7 @@ export default function GenerateSermon() {
         throw new Error(data.error || 'Failed to generate sermon')
       }
 
-      setGeneratedContent(data.sermon)
+      setGeneratedContent(data.content)
       notifyUsageUpdate()
     } catch (error) {
       console.error('Error generating sermon:', error)
@@ -165,7 +165,7 @@ export default function GenerateSermon() {
                     value={formData.topic}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                     placeholder="e.g., Faith in Difficult Times"
                   />
                 </div>
@@ -179,7 +179,7 @@ export default function GenerateSermon() {
                     name="verse"
                     value={formData.verse}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                     placeholder="e.g., Romans 8:28"
                   />
                 </div>
@@ -192,7 +192,7 @@ export default function GenerateSermon() {
                     name="style"
                     value={formData.style}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="conversational">Conversational</option>
                     <option value="expository">Expository</option>
@@ -209,7 +209,7 @@ export default function GenerateSermon() {
                     name="length"
                     value={formData.length}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="short">Short (15-20 minutes)</option>
                     <option value="medium">Medium (25-30 minutes)</option>

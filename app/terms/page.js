@@ -1,14 +1,34 @@
 'use client'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 import Layout from '../../components/layout/Layout'
 import BackButton from '../../components/ui/BackButton'
 
 export default function Terms() {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user || null)
+    }
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <Layout>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <BackButton href="/" className="mb-4">
-            ← Back to Home
+          <BackButton href={user ? "/dashboard" : "/"} className="mb-4">
+            Back to {user ? "Dashboard" : "Home"}
           </BackButton>
         </div>
 

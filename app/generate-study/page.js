@@ -74,7 +74,7 @@ export default function GenerateStudy() {
         throw new Error(data.error || 'Failed to generate study')
       }
 
-      setGeneratedContent(data.outline)
+      setGeneratedContent(data.content)
       notifyUsageUpdate()
     } catch (error) {
       console.error('Error generating study:', error)
@@ -164,7 +164,7 @@ export default function GenerateStudy() {
                     value={formData.topic}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                     placeholder="e.g., The Fruit of the Spirit"
                   />
                 </div>
@@ -177,7 +177,7 @@ export default function GenerateStudy() {
                     name="audience"
                     value={formData.audience}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                   >
                     <option value="adults">Adults</option>
                     <option value="youth">Youth</option>
@@ -194,7 +194,7 @@ export default function GenerateStudy() {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                   >
                     <option value="30">30 minutes</option>
                     <option value="45">45 minutes</option>
