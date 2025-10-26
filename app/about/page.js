@@ -95,7 +95,7 @@ export default function About() {
                   shepherding their flocks and growing in their relationship with God.
                 </p>
                 <p>
-                  Founded by a team of Christian technologists and ministry leaders, we understand the unique 
+                  Founded by Christian technologists and ministry leaders, we understand the unique 
                   challenges pastors face. We&apos;ve seen firsthand how the demands of modern ministry can 
                   overwhelm even the most dedicated servants of God.
                 </p>
@@ -195,45 +195,6 @@ export default function About() {
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Accessible Ministry</h3>
               <p className="text-gray-600">
                 Making quality pastoral resources accessible to churches of all sizes and budgets.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Team Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Our Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-2xl">JD</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">John Doe</h3>
-              <p className="text-indigo-600 font-medium mb-2">Founder & CEO</p>
-              <p className="text-gray-600 text-sm">
-                Former pastor with 15 years of ministry experience and a passion for technology that serves the church.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-2xl">SM</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sarah Miller</h3>
-              <p className="text-indigo-600 font-medium mb-2">CTO</p>
-              <p className="text-gray-600 text-sm">
-                AI researcher and Christian technologist with expertise in natural language processing and ministry applications.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-2xl">MJ</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Michael Johnson</h3>
-              <p className="text-indigo-600 font-medium mb-2">Head of Ministry</p>
-              <p className="text-gray-600 text-sm">
-                Seminary professor and ministry consultant who ensures our tools align with Biblical principles and pastoral needs.
               </p>
             </div>
           </div>

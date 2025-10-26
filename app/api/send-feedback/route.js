@@ -4,11 +4,11 @@ export async function POST(request) {
   try {
     console.log('📧 Feedback API called')
     
-    const { name, email, subject, message, type } = await request.json()
-    console.log('📧 Received feedback:', { name, email, subject, type })
+    const { userName, userEmail, subject, message, type } = await request.json()
+    console.log('📧 Received feedback:', { userName, userEmail, subject, type })
 
     // Validate required fields
-    if (!name || !email || !subject || !message || !type) {
+    if (!userName || !userEmail || !subject || !message || !type) {
       console.log('❌ Missing required fields')
       return NextResponse.json(
         { success: false, error: 'All fields are required' },
@@ -38,7 +38,7 @@ export async function POST(request) {
     console.log('📧 FEEDBACK EMAIL (Email service not configured):')
     console.log('=====================================')
     console.log(`Type: ${type.toUpperCase()}`)
-    console.log(`From: ${name} <${email}>`)
+    console.log(`From: ${userName} <${userEmail}>`)
     console.log(`Subject: ${subject}`)
     console.log(`Message: ${message}`)
     console.log('=====================================')

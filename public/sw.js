@@ -1,32 +1,25 @@
-const CACHE_NAME = 'churchcontentai-v1'
-const STATIC_CACHE = 'static-v1'
-const DYNAMIC_CACHE = 'dynamic-v1'
+const CACHE_NAME = 'churchcontentai-v2' // Updated version
+const STATIC_CACHE = 'static-v2'
+const DYNAMIC_CACHE = 'dynamic-v2'
 
-// Files to cache for offline use
+// Only cache essential static assets, not pages
 const STATIC_FILES = [
-  '/',
-  '/auth',
-  '/dashboard',
-  '/generate-sermon',
-  '/generate-study',
-  '/pricing',
-  '/feedback',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'
 ]
 
-// Install event - cache static files
+// Install event - cache only essential static files
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...')
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('Caching static files')
+        console.log('Caching essential static files only')
         return cache.addAll(STATIC_FILES)
       })
       .then(() => {
-        console.log('Static files cached successfully')
+        console.log('Essential files cached successfully')
         return self.skipWaiting()
       })
       .catch((error) => {
@@ -57,7 +50,7 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first strategy for better UX
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -77,12 +70,40 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // For HTML pages, always try network first
+  if (request.headers.get('accept').includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Only cache successful responses
+          if (response.status === 200) {
+            const responseToCache = response.clone()
+            caches.open(DYNAMIC_CACHE)
+              .then((cache) => {
+                cache.put(request, responseToCache)
+              })
+          }
+          return response
+        })
+        .catch(() => {
+          // Fallback to cache only if network fails
+          return caches.match(request)
+        })
+    )
+    return
+  }
+
+  // For other resources, try cache first but with shorter TTL
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          console.log('Serving from cache:', request.url)
-          return cachedResponse
+          // Check if cache is fresh (less than 1 hour old)
+          const cacheTime = cachedResponse.headers.get('sw-cache-time')
+          if (cacheTime && Date.now() - parseInt(cacheTime) < 3600000) {
+            console.log('Serving fresh cache:', request.url)
+            return cachedResponse
+          }
         }
 
         console.log('Fetching from network:', request.url)
@@ -93,22 +114,26 @@ self.addEventListener('fetch', (event) => {
               return response
             }
 
-            // Clone the response
+            // Clone the response and add cache timestamp
             const responseToCache = response.clone()
+            const headers = new Headers(responseToCache.headers)
+            headers.set('sw-cache-time', Date.now().toString())
 
-            // Cache dynamic content
+            // Cache with timestamp
             caches.open(DYNAMIC_CACHE)
               .then((cache) => {
-                cache.put(request, responseToCache)
+                cache.put(request, new Response(responseToCache.body, {
+                  status: responseToCache.status,
+                  statusText: responseToCache.statusText,
+                  headers: headers
+                }))
               })
 
             return response
           })
           .catch(() => {
-            // Return offline page for navigation requests
-            if (request.headers.get('accept').includes('text/html')) {
-              return caches.match('/')
-            }
+            // Return cached version if available
+            return cachedResponse || new Response('Offline', { status: 503 })
           })
       })
   )

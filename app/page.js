@@ -192,13 +192,13 @@ export default function Home() {
                 <h4 className="text-2xl font-bold text-gray-900 mb-2">Free Plan</h4>
                 <div className="text-4xl font-bold text-gray-900 mb-4">₦0</div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     3 generations per month
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -212,19 +212,19 @@ export default function Home() {
                 <div className="text-4xl font-bold text-indigo-600 mb-4">₦5,000</div>
                 <p className="text-gray-600 mb-6">per month</p>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Unlimited generations
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Advanced AI features
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>

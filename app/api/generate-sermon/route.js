@@ -89,9 +89,9 @@ export async function POST(request) {
     const { topic, verse, style, length } = await request.json()
 
     // Validate required fields
-    if (!topic || !verse) {
+    if (!topic) {
       return NextResponse.json(
-        { error: 'Topic and verse are required' }, 
+        { error: 'Topic is required' }, 
         { status: 400 }
       )
     }
