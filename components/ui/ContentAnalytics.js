@@ -6,6 +6,78 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
   const [isLoading, setIsLoading] = useState(true)
 
+  const analyzePreachingPatterns = useCallback((content) => {
+    if (!content || content.length === 0) {
+      return {
+        preferredStyle: 'conversational',
+        averageLength: 'medium',
+        commonThemes: []
+      }
+    }
+
+    const styles = content.map(c => c.style || 'conversational')
+    const lengths = content.map(c => c.length || 'medium')
+    
+    const styleCounts = styles.reduce((acc, style) => {
+      acc[style] = (acc[style] || 0) + 1
+      return acc
+    }, {})
+
+    const lengthCounts = lengths.reduce((acc, length) => {
+      acc[length] = (acc[length] || 0) + 1
+      return acc
+    }, {})
+
+    return {
+      preferredStyle: Object.keys(styleCounts).reduce((a, b) => styleCounts[a] > styleCounts[b] ? a : b),
+      averageLength: Object.keys(lengthCounts).reduce((a, b) => lengthCounts[a] > lengthCounts[b] ? a : b),
+      commonThemes: analyzeTopicTrends(content).slice(0, 3).map(t => t.topic)
+    }
+  }, [])
+
+  const generateAnalyticsRecommendations = useCallback((content) => {
+    const recommendations = []
+    
+    if (!content || content.length === 0) {
+      recommendations.push({
+        type: 'getting_started',
+        title: 'Start Creating Content',
+        description: 'Begin with a simple sermon or Bible study to build your content library',
+        priority: 'high'
+      })
+      return recommendations
+    }
+
+    const patterns = analyzePreachingPatterns(content)
+    
+    if (patterns.commonThemes.length < 3) {
+      recommendations.push({
+        type: 'diversification',
+        title: 'Diversify Your Topics',
+        description: 'Explore different themes to provide balanced spiritual nourishment',
+        priority: 'medium'
+      })
+    }
+
+    if (content.length < 5) {
+      recommendations.push({
+        type: 'consistency',
+        title: 'Build Content Consistency',
+        description: 'Regular content creation helps develop your preaching voice',
+        priority: 'high'
+      })
+    }
+
+    recommendations.push({
+      type: 'series',
+      title: 'Consider a Sermon Series',
+      description: 'Your recent content suggests a series on your most common themes would be effective',
+      priority: 'low'
+    })
+
+    return recommendations
+  }, [analyzePreachingPatterns])
+
   const generateAnalytics = useCallback(async () => {
     setIsLoading(true)
     
@@ -95,78 +167,6 @@ const ContentAnalytics = ({ userContent, usageStats }) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5)
   }
-
-  const analyzePreachingPatterns = useCallback((content) => {
-    if (!content || content.length === 0) {
-      return {
-        preferredStyle: 'conversational',
-        averageLength: 'medium',
-        commonThemes: []
-      }
-    }
-
-    const styles = content.map(c => c.style || 'conversational')
-    const lengths = content.map(c => c.length || 'medium')
-    
-    const styleCounts = styles.reduce((acc, style) => {
-      acc[style] = (acc[style] || 0) + 1
-      return acc
-    }, {})
-
-    const lengthCounts = lengths.reduce((acc, length) => {
-      acc[length] = (acc[length] || 0) + 1
-      return acc
-    }, {})
-
-    return {
-      preferredStyle: Object.keys(styleCounts).reduce((a, b) => styleCounts[a] > styleCounts[b] ? a : b),
-      averageLength: Object.keys(lengthCounts).reduce((a, b) => lengthCounts[a] > lengthCounts[b] ? a : b),
-      commonThemes: analyzeTopicTrends(content).slice(0, 3).map(t => t.topic)
-    }
-  }, [])
-
-  const generateAnalyticsRecommendations = useCallback((content) => {
-    const recommendations = []
-    
-    if (!content || content.length === 0) {
-      recommendations.push({
-        type: 'getting_started',
-        title: 'Start Creating Content',
-        description: 'Begin with a simple sermon or Bible study to build your content library',
-        priority: 'high'
-      })
-      return recommendations
-    }
-
-    const patterns = analyzePreachingPatterns(content)
-    
-    if (patterns.commonThemes.length < 3) {
-      recommendations.push({
-        type: 'diversification',
-        title: 'Diversify Your Topics',
-        description: 'Explore different themes to provide balanced spiritual nourishment',
-        priority: 'medium'
-      })
-    }
-
-    if (content.length < 5) {
-      recommendations.push({
-        type: 'consistency',
-        title: 'Build Content Consistency',
-        description: 'Regular content creation helps develop your preaching voice',
-        priority: 'high'
-      })
-    }
-
-    recommendations.push({
-      type: 'series',
-      title: 'Consider a Sermon Series',
-      description: 'Your recent content suggests a series on your most common themes would be effective',
-      priority: 'low'
-    })
-
-    return recommendations
-  }, [analyzePreachingPatterns])
 
   const calculateGrowthInsights = (content, stats) => {
     const insights = []
