@@ -5,20 +5,10 @@ import { supabase } from '../../lib/supabase'
 export default function DebugPage() {
   const [debugInfo, setDebugInfo] = useState({})
   const [loading, setLoading] = useState(true)
-
-  // Disable debug page in production for security
-  if (process.env.NODE_ENV === 'production') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Debug Page Disabled</h1>
-          <p className="text-gray-600">This page is not available in production.</p>
-        </div>
-      </div>
-    )
-  }
+  const isProduction = process.env.NODE_ENV === 'production'
 
   useEffect(() => {
+    if (isProduction) return
     const runDiagnostics = async () => {
       const info = {
         timestamp: new Date().toISOString(),
@@ -58,7 +48,19 @@ export default function DebugPage() {
     }
 
     runDiagnostics()
-  }, [])
+  }, [isProduction])
+
+  // Disable debug page in production for security
+  if (isProduction) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Debug Page Disabled</h1>
+          <p className="text-gray-600">This page is not available in production.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

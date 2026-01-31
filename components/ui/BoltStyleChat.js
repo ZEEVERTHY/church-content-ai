@@ -151,7 +151,7 @@ function ChatInput({ onSend, placeholder = "What do you want to build?", disable
                     <div className="p-1.5 min-w-[180px]">
                       {[
                         { icon: <Paperclip className="size-4" />, label: 'Upload file' },
-                        { icon: <Image className="size-4" />, label: 'Add image' },
+                        { icon: <Image className="size-4" aria-label="Add image" />, label: 'Add image' },
                         { icon: <FileCode className="size-4" />, label: 'Import code' }
                       ].map((item, i) => (
                         <button key={i} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[#a0a0a5] hover:bg-white/5 hover:text-white transition-all duration-150">
