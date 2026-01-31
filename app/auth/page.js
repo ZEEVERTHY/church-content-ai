@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 // Simple Button component
 const Button = ({ children, className = '', onClick, disabled, size = 'default', ...props }) => {
@@ -26,14 +27,7 @@ const Button = ({ children, className = '', onClick, disabled, size = 'default',
 function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [session, setSession] = useState(null)
-  
-  // Safety check for router
-  let router
-  try {
-    router = useRouter()
-  } catch (e) {
-    console.error('Router error:', e)
-  }
+  const router = useRouter()
 
   useEffect(() => {
     if (!supabase) {
@@ -186,12 +180,12 @@ function AuthPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <a href="/" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center justify-center">
+              <Link href="/" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center justify-center">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Back to home
-              </a>
+              </Link>
             </div>
           </div>
 

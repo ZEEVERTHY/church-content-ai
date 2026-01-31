@@ -128,7 +128,7 @@ export default function SimpleUI({
         })
       }
     }
-  }, [output, mode, audience, teachingStyle, culturalContext, tone, length])
+  }, [output, mode, audience, teachingStyle, culturalContext, tone, length, messages])
 
   useEffect(() => {
     if (error && messages.length > 0) {
@@ -144,7 +144,7 @@ export default function SimpleUI({
         })
       }
     }
-  }, [error])
+  }, [error, messages])
 
   const handleCopy = async (content, id) => {
     try {
@@ -819,7 +819,7 @@ export default function SimpleUI({
                   <Sparkles className="w-12 h-12 mx-auto mb-4 text-primary" />
                   <p className="text-lg font-medium mb-2">You understand the Bible</p>
                   <p className="text-sm">
-                    Share what's on your heart, and I'll help you structure it, apply it, and communicate it clearly to your people.
+                    Share what&apos;s on your heart, and I&apos;ll help you structure it, apply it, and communicate it clearly to your people.
                   </p>
                 </div>
               </div>

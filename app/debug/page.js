@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export default function DebugPage() {
+  const [debugInfo, setDebugInfo] = useState({})
+  const [loading, setLoading] = useState(true)
+
   // Disable debug page in production for security
   if (process.env.NODE_ENV === 'production') {
     return (
@@ -14,9 +17,6 @@ export default function DebugPage() {
       </div>
     )
   }
-
-  const [debugInfo, setDebugInfo] = useState({})
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const runDiagnostics = async () => {
