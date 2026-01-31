@@ -4,10 +4,9 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Enable SWC minification for faster builds
-  swcMinify: true,
-  
   // Optimize production builds
+  // Note: SWC minification is enabled by default in Next.js 15+
+  
   productionBrowserSourceMaps: false,
   
   // Image optimization with shorter cache times

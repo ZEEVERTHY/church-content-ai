@@ -4,7 +4,7 @@ import * as React from 'react'
 import { Send, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Textarea } from './textarea'
-import { Button } from './button'
+import { Button } from './button.js'
 import { useTextareaResize } from '@/hooks/use-textarea-resize'
 
 // Context for ChatInput
