@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { DataSaverProvider } from "../components/ui/DataSaverMode";
 import PerformanceMonitor from "../components/ui/PerformanceMonitor";
+import { ThemeProvider } from "../components/theme-provider";
 
 // Use system font for better performance
 const inter = Inter({
@@ -70,9 +71,12 @@ export const viewport = {
   themeColor: '#4f46e5',
 }
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
@@ -83,19 +87,26 @@ export default function RootLayout({ children }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#4f46e5" />
         <meta name="msapplication-tap-highlight" content="no" />
+        {/* Optimized font loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <DataSaverProvider>
-          {children}
-          {/* <PerformanceMonitor /> */}
-        </DataSaverProvider>
+        <ThemeProvider>
+          <DataSaverProvider>
+            {children}
+            {/* <PerformanceMonitor /> */}
+          </DataSaverProvider>
+        </ThemeProvider>
+        {/* Defer service worker registration - non-blocking */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
+                // Defer registration to not block page load
+                setTimeout(function() {
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
                       console.log('SW registered: ', registration);
@@ -103,7 +114,7 @@ export default function RootLayout({ children }) {
                     .catch(function(registrationError) {
                       console.log('SW registration failed: ', registrationError);
                     });
-                });
+                }, 2000);
               }
             `,
           }}

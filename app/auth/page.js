@@ -1,22 +1,88 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Layout from '../../components/layout/Layout'
-import Button from '../../components/ui/Button'
-import Card from '../../components/ui/Card'
-import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
-export default function AuthPage() {
+// Simple Button component
+const Button = ({ children, className = '', onClick, disabled, size = 'default', ...props }) => {
+  const sizeClasses = {
+    default: 'h-10 px-4 py-2',
+    sm: 'h-9 px-3',
+    lg: 'h-11 px-8',
+    icon: 'h-10 w-10'
+  }
+  return (
+    <button
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none transition-colors ${sizeClasses[size] || sizeClasses.default} ${className}`}
+      onClick={onClick}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
+function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [session, setSession] = useState(null)
-  const router = useRouter()
+  
+  // Safety check for router
+  let router
+  try {
+    router = useRouter()
+  } catch (e) {
+    console.error('Router error:', e)
+  }
 
   useEffect(() => {
+    if (!supabase) {
+      console.error('Supabase is not initialized')
+      return
+    }
+    
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        // Handle refresh token errors
+        if (error && (error.message?.includes('Refresh Token') || 
+                      error.message?.includes('refresh_token'))) {
+          // Clear invalid tokens
+          if (typeof window !== 'undefined') {
+            try {
+              Object.keys(localStorage).forEach(key => {
+                if (key.includes('supabase') || key.includes('sb-')) {
+                  localStorage.removeItem(key)
+                }
+              })
+            } catch (e) {
+              console.error('Error clearing storage:', e)
+            }
+          }
+          setSession(null)
+          return
+        }
+        
+        setSession(session)
+      } catch (error) {
+        console.error('Session check error:', error)
+        
+        // Clear storage on any auth error
+        if (typeof window !== 'undefined') {
+          try {
+            Object.keys(localStorage).forEach(key => {
+              if (key.includes('supabase') || key.includes('sb-')) {
+                localStorage.removeItem(key)
+              }
+            })
+          } catch (e) {
+            console.error('Error clearing storage:', e)
+          }
+        }
+        
+        setSession(null)
+      }
     }
     
     checkSession()
@@ -25,23 +91,34 @@ export default function AuthPage() {
       setSession(session)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   useEffect(() => {
-    if (session) {
+    if (session && router) {
       router.push('/dashboard')
     }
   }, [session, router])
 
   const handleGoogleSignIn = async () => {
+    if (!supabase) {
+      console.error('Supabase is not initialized')
+      return
+    }
+    
     setLoading(true)
     
     try {
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${redirectUrl}/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -60,23 +137,22 @@ export default function AuthPage() {
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-8 sm:py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-8 sm:py-12 px-4" suppressHydrationWarning>
         <div className="max-w-md w-full">
-          <Card className="text-center">
-            <Card.Header>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-center">
+            <div className="px-6 py-4 border-b border-gray-200">
               <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-white font-bold text-2xl">C</span>
               </div>
-              <Card.Title className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Welcome to ChurchContentAI
-              </Card.Title>
-              <Card.Description className="text-lg">
+              </h3>
+              <p className="text-lg text-gray-600">
                 Sign in to start creating inspiring content for your ministry
-              </Card.Description>
-            </Card.Header>
+              </p>
+            </div>
 
-            <Card.Content>
+            <div className="px-6 py-4">
               <Button
                 onClick={handleGoogleSignIn}
                 disabled={loading}
@@ -85,7 +161,10 @@ export default function AuthPage() {
               >
                 {loading ? (
                   <>
-                    <LoadingSpinner size="sm" color="white" className="mr-2" />
+                    <svg className="w-4 h-4 mr-2 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                     Signing in...
                   </>
                 ) : (
@@ -104,17 +183,17 @@ export default function AuthPage() {
               <div className="text-center text-sm text-gray-500 mb-4">
                 By signing in, you agree to our Terms of Service and Privacy Policy
               </div>
-            </Card.Content>
+            </div>
 
-            <Card.Footer>
-              <Link href="/" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center justify-center">
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <a href="/" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center justify-center">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Back to home
-              </Link>
-            </Card.Footer>
-          </Card>
+              </a>
+            </div>
+          </div>
 
           {/* Features Preview */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
@@ -137,6 +216,7 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
-    </Layout>
   )
 }
+
+export default AuthPage

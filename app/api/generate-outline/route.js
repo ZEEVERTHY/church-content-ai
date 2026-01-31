@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server'
 import { generateOutline } from '../../../lib/openai'
 import { supabase } from '../../../lib/supabase'
+import { serverLog, serverError } from '../../../lib/logger'
 
 export async function POST(request) {
   try {
-    console.log('🔍 Outline API: Starting generation...')
+    serverLog('🔍 Outline API: Starting generation...')
     
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('🔍 Auth header exists:', !!authHeader)
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No valid auth header')
       return NextResponse.json(
         { error: 'Authentication required' }, 
         { status: 401 }
@@ -23,11 +22,8 @@ export async function POST(request) {
     // Verify the token with Supabase
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
-    console.log('📊 User exists:', !!user)
-    console.log('👤 User ID:', user?.id)
-    
     if (userError || !user) {
-      console.log('❌ Invalid token or user not found:', userError)
+      serverError('❌ Invalid token or user not found:', userError?.message)
       return NextResponse.json(
         { error: 'Authentication required' }, 
         { status: 401 }
@@ -35,9 +31,7 @@ export async function POST(request) {
     }
 
     // Check if user has active subscription
-    console.log('🔍 Checking subscription status for user:', user.id)
-    
-    const { data: subscriptionData, error: subError } = await supabase
+    const { data: subscriptionData } = await supabase
       .from('user_subscriptions')
       .select('status, current_period_end')
       .eq('user_id', user.id)
@@ -45,38 +39,31 @@ export async function POST(request) {
       .single()
 
     const hasActiveSub = subscriptionData && subscriptionData.current_period_end > Math.floor(Date.now() / 1000)
-    console.log('📊 Has active subscription:', hasActiveSub)
 
     // Initialize totalUsage variable
     let totalUsage = 0
 
     // If no active subscription, check usage limits
     if (!hasActiveSub) {
-      console.log('🔍 Checking usage for user:', user.id)
-      
       const { data: usageData, error: usageError } = await supabase
         .from('user_usage')
         .select('*')
         .eq('user_id', user.id)
 
-      console.log('📊 Usage query result:', { usageData, usageError })
-
       if (usageError) {
-        console.error('❌ Usage check error:', usageError)
+        serverError('❌ Usage check error:', usageError)
         return NextResponse.json(
-          { error: `Database error: ${usageError.message}` }, 
+          { error: 'Unable to verify usage limits. Please try again.' }, 
           { status: 500 }
         )
       }
 
       totalUsage = usageData?.length || 0
-      console.log('📊 Total lifetime usage:', totalUsage)
 
       if (totalUsage >= 3) {
-        console.log('🛑 User has reached limit!')
         return NextResponse.json(
           { 
-            error: 'You have reached your limit of 3 total creations. Upgrade for unlimited access!',
+            error: 'You have reached your limit of 3 total creations. Upgrade to Premium for unlimited access!',
             totalUsage: totalUsage,
             limitReached: true
           }, 
@@ -85,44 +72,37 @@ export async function POST(request) {
       }
     }
 
+    // Get the request data
     const { topic, targetAudience, duration } = await request.json()
 
-    if (!topic) {
+    // Validate required fields
+    if (!topic || topic.trim().length === 0) {
       return NextResponse.json(
         { error: 'Topic is required' }, 
         { status: 400 }
       )
     }
 
-    console.log('🤖 Generating outline with:', { topic, targetAudience, duration })
+    serverLog('🤖 Generating outline:', { topic, targetAudience, duration, userId: user.id })
 
     // Generate the outline using OpenAI
     const result = await generateOutline(topic, targetAudience, duration)
 
     if (result.success) {
-      console.log('✅ Outline generated successfully, now tracking usage...')
-      
-      // Track usage - CRITICAL: Make sure this insert works
+      // Track usage only if generation was successful
       const usageInsert = {
         user_id: user.id,
         content_type: 'study',
         created_at: new Date().toISOString()
       }
       
-      console.log('💾 Inserting usage record:', usageInsert)
-      
-      const { data: insertData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('user_usage')
         .insert(usageInsert)
-        .select()
-
-      console.log('💾 Insert result:', { insertData, insertError })
 
       if (insertError) {
-        console.error('❌ CRITICAL: Error tracking usage:', insertError)
+        serverError('❌ Error tracking usage:', insertError)
         // Still return success but log the tracking failure
-      } else {
-        console.log('✅ Usage tracked successfully')
       }
 
       return NextResponse.json({
@@ -131,23 +111,19 @@ export async function POST(request) {
         usage: result.usage,
         hasActiveSubscription: hasActiveSub,
         totalUsage: hasActiveSub ? 'unlimited' : (totalUsage + 1),
-        remainingCreations: hasActiveSub ? 'unlimited' : (2 - totalUsage),
-        debug: {
-          usageTracked: !insertError,
-          insertError: insertError?.message || null
-        }
+        remainingCreations: hasActiveSub ? 'unlimited' : Math.max(0, 2 - totalUsage),
       })
     } else {
-      console.error('❌ Outline generation failed:', result.error)
+      serverError('❌ Outline generation failed:', result.error)
       return NextResponse.json(
-        { error: result.error }, 
+        { error: result.error || 'Failed to generate outline. Please try again.' }, 
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('❌ Outline generation error:', error)
+    serverError('❌ Outline generation error:', error)
     return NextResponse.json(
-      { error: 'Failed to generate outline', details: error.message }, 
+      { error: 'An unexpected error occurred. Please try again later.' }, 
       { status: 500 }
     )
   }

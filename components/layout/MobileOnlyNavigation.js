@@ -16,8 +16,6 @@ const MobileOnlyNavigation = ({ user, onSignOut }) => {
 
   const navigationItems = [
     { name: 'Dashboard', href: '/dashboard', protected: true },
-    { name: 'Generate Sermon', href: '/generate-sermon', protected: true },
-    { name: 'Generate Study', href: '/generate-study', protected: true },
     { name: 'Pricing', href: '/pricing', protected: false },
     { name: 'Feedback', href: '/feedback', protected: false },
   ]

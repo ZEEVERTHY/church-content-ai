@@ -1,6 +1,6 @@
-const CACHE_NAME = 'churchcontentai-v2' // Updated version
-const STATIC_CACHE = 'static-v2'
-const DYNAMIC_CACHE = 'dynamic-v2'
+const CACHE_NAME = 'churchcontentai-v3' // Updated version - no HTML caching
+const STATIC_CACHE = 'static-v3'
+const DYNAMIC_CACHE = 'dynamic-v3'
 
 // Only cache essential static assets, not pages
 const STATIC_FILES = [
@@ -70,71 +70,65 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // For HTML pages, always try network first
+  // For HTML pages, NEVER cache - always fetch fresh from network
   if (request.headers.get('accept').includes('text/html')) {
     event.respondWith(
-      fetch(request)
+      fetch(request, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
         .then((response) => {
-          // Only cache successful responses
-          if (response.status === 200) {
-            const responseToCache = response.clone()
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseToCache)
-              })
-          }
+          // Don't cache HTML pages at all - always get fresh content
           return response
         })
         .catch(() => {
-          // Fallback to cache only if network fails
-          return caches.match(request)
+          // Only show cached version if completely offline
+          return caches.match(request).then(cached => {
+            if (cached) {
+              // Add a warning header to indicate this is stale
+              return new Response(cached.body, {
+                status: cached.status,
+                statusText: cached.statusText,
+                headers: {
+                  ...cached.headers,
+                  'X-Cache': 'stale-offline'
+                }
+              })
+            }
+            return new Response('You are offline', { status: 503 })
+          })
         })
     )
     return
   }
 
-  // For other resources, try cache first but with shorter TTL
+  // For other resources (JS, CSS, images), use network-first with short cache
   event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          // Check if cache is fresh (less than 1 hour old)
-          const cacheTime = cachedResponse.headers.get('sw-cache-time')
-          if (cacheTime && Date.now() - parseInt(cacheTime) < 3600000) {
-            console.log('Serving fresh cache:', request.url)
-            return cachedResponse
-          }
+    fetch(request, {
+      cache: 'no-cache'
+    })
+      .then((response) => {
+        // Only cache static assets (JS, CSS, images) - not pages or API responses
+        if (response.status === 200 && 
+            (url.pathname.includes('/_next/static/') || 
+             url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$/))) {
+          const responseToCache = response.clone()
+          caches.open(DYNAMIC_CACHE)
+            .then((cache) => {
+              cache.put(request, responseToCache)
+            })
         }
-
-        console.log('Fetching from network:', request.url)
-        return fetch(request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response
-            }
-
-            // Clone the response and add cache timestamp
-            const responseToCache = response.clone()
-            const headers = new Headers(responseToCache.headers)
-            headers.set('sw-cache-time', Date.now().toString())
-
-            // Cache with timestamp
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, new Response(responseToCache.body, {
-                  status: responseToCache.status,
-                  statusText: responseToCache.statusText,
-                  headers: headers
-                }))
-              })
-
-            return response
-          })
-          .catch(() => {
-            // Return cached version if available
-            return cachedResponse || new Response('Offline', { status: 503 })
-          })
+        return response
+      })
+      .catch(() => {
+        // Fallback to cache only for static assets
+        return caches.match(request).then(cached => {
+          return cached || new Response('Resource not available offline', { status: 503 })
+        })
       })
   )
 })

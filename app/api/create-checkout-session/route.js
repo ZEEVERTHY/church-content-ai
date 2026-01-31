@@ -1,81 +1,74 @@
 import { NextResponse } from 'next/server'
 import { stripe, STRIPE_CONFIG } from '../../../lib/stripe'
 import { supabase } from '../../../lib/supabase'
+import { serverLog, serverError } from '../../../lib/logger'
+import { withSecurity } from '../../../lib/security/middleware'
+import { checkoutSchema } from '../../../lib/security/inputValidation'
 
-export async function POST(request) {
+/**
+ * Create Checkout Session API Handler
+ * Secured with rate limiting, authentication, and input validation
+ */
+async function handleCheckout(request, { user, validatedData, rateLimitHeaders }) {
   try {
-    console.log('🔍 Creating checkout session...')
+    serverLog('🔍 Creating checkout session...')
     
     // Check environment variables first
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.log('❌ STRIPE_SECRET_KEY not found in environment variables')
+      serverError('❌ STRIPE_SECRET_KEY not found')
       return NextResponse.json(
-        { error: 'Stripe configuration error: Secret key not found' }, 
-        { status: 500 }
+        { error: 'Payment service is not configured. Please contact support.' }, 
+        { status: 500, headers: rateLimitHeaders }
       )
     }
 
     if (!process.env.STRIPE_PRICE_ID) {
-      console.log('❌ STRIPE_PRICE_ID not found in environment variables')
+      serverError('❌ STRIPE_PRICE_ID not found')
       return NextResponse.json(
-        { error: 'Stripe configuration error: Price ID not found' }, 
-        { status: 500 }
+        { error: 'Payment service is not configured. Please contact support.' }, 
+        { status: 500, headers: rateLimitHeaders }
       )
     }
 
     if (!process.env.NEXT_PUBLIC_APP_URL) {
-      console.log('❌ NEXT_PUBLIC_APP_URL not found in environment variables')
+      serverError('❌ NEXT_PUBLIC_APP_URL not found')
       return NextResponse.json(
-        { error: 'App configuration error: App URL not found' }, 
+        { error: 'App configuration error. Please contact support.' }, 
+        { status: 500, headers: rateLimitHeaders }
+      )
+    }
+    
+    // validatedData is already sanitized and validated
+    const { priceId, userId, userEmail } = validatedData
+    
+    // Verify userId matches authenticated user (prevent user spoofing)
+    if (userId !== user.id) {
+      serverError('❌ User ID mismatch:', { provided: userId, authenticated: user.id })
+      return NextResponse.json(
+        { error: 'Invalid user ID' }, 
+        { status: 403, headers: rateLimitHeaders }
+      )
+    }
+    
+    // Verify email matches user's email (prevent email spoofing)
+    if (userEmail !== user.email) {
+      serverError('❌ Email mismatch:', { provided: userEmail, authenticated: user.email })
+      return NextResponse.json(
+        { error: 'Invalid email address' }, 
+        { status: 403, headers: rateLimitHeaders }
+      )
+    }
+
+    // Validate that Stripe is initialized
+    if (!stripe) {
+      serverError('❌ Stripe not initialized')
+      return NextResponse.json(
+        { error: 'Payment service is not available. Please contact support.' }, 
         { status: 500 }
       )
     }
-    
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    console.log('🔍 Auth header exists:', !!authHeader)
-    console.log('🔍 Auth header starts with Bearer:', authHeader?.startsWith('Bearer '))
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No valid auth header')
-      return NextResponse.json(
-        { error: 'Authentication required' }, 
-        { status: 401 }
-      )
-    }
 
-    const token = authHeader.replace('Bearer ', '')
-
-    // Verify the token with Supabase
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-    
-    if (userError || !user) {
-      console.log('❌ Invalid token or user not found:', userError)
-      return NextResponse.json(
-        { error: 'Authentication required' }, 
-        { status: 401 }
-      )
-    }
-
-    const requestBody = await request.json()
-    console.log('🔍 Request body:', requestBody)
-    
-    const { priceId, userId, userEmail } = requestBody
-
-    console.log('🔍 Price ID:', priceId)
-    console.log('🔍 User ID:', userId)
-    console.log('🔍 User Email:', userEmail)
-    console.log('🔍 STRIPE_PRICE_ID from env:', process.env.STRIPE_PRICE_ID)
-
-    if (!priceId || !userId || !userEmail) {
-      console.log('❌ Missing required parameters:', { priceId: !!priceId, userId: !!userId, userEmail: !!userEmail })
-      return NextResponse.json(
-        { error: 'Missing required parameters', details: { priceId: !!priceId, userId: !!userId, userEmail: !!userEmail } }, 
-        { status: 400 }
-      )
-    }
-
-    console.log('💳 Creating Stripe checkout session for user:', userId)
+    serverLog('💳 Creating Stripe checkout session:', { userId, userEmail })
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -102,14 +95,29 @@ export async function POST(request) {
       },
     })
 
-    console.log('✅ Checkout session created:', session.id)
+    serverLog('✅ Checkout session created:', session.id)
 
-    return NextResponse.json({ sessionId: session.id })
+    const response = NextResponse.json({ sessionId: session.id })
+    
+    // Add rate limit headers
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    
+    return response
   } catch (error) {
-    console.error('❌ Error creating checkout session:', error)
+    serverError('❌ Error creating checkout session:', error)
     return NextResponse.json(
-      { error: 'Failed to create checkout session', details: error.message }, 
+      { error: 'Failed to create checkout session. Please try again.' }, 
       { status: 500 }
     )
   }
 }
+
+// Export secured handler
+export const POST = withSecurity(handleCheckout, {
+  requireAuth: true,
+  rateLimitType: 'checkout',
+  validationSchema: checkoutSchema,
+  allowedMethods: ['POST'],
+})

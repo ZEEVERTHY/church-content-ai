@@ -3,6 +3,18 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export default function DebugPage() {
+  // Disable debug page in production for security
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Debug Page Disabled</h1>
+          <p className="text-gray-600">This page is not available in production.</p>
+        </div>
+      </div>
+    )
+  }
+
   const [debugInfo, setDebugInfo] = useState({})
   const [loading, setLoading] = useState(true)
 

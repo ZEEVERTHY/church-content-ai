@@ -18,7 +18,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    console.log('🔔 Received webhook event:', event.type)
+    serverLog('🔔 Received webhook event:', event.type)
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -49,9 +49,17 @@ export async function POST(request) {
         console.log(`Unhandled event type: ${event.type}`)
     }
 
-    return NextResponse.json({ received: true })
+    const response = NextResponse.json({ received: true })
+    
+    // Add rate limit headers
+    const rateLimitHeaders = getRateLimitHeaders(request, 'public', null)
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    
+    return response
   } catch (error) {
-    console.error('❌ Webhook error:', error)
+    serverError('❌ Webhook error:', error)
     return NextResponse.json(
       { error: 'Webhook handler failed' }, 
       { status: 500 }

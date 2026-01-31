@@ -4,6 +4,12 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Enable SWC minification for faster builds
+  swcMinify: true,
+  
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+  
   // Image optimization with shorter cache times
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -29,15 +35,65 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.lovart.ai',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   
   // Experimental features for performance
   experimental: {
-    optimizePackageImports: ['@stripe/stripe-js', 'lucide-react'],
+    optimizePackageImports: ['@stripe/stripe-js', 'lucide-react', 'next-themes'],
+    // Enable faster refresh
+    optimizeCss: true,
   },
   
-  // Headers for better caching control
+  // Optimize bundle size - remove console in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    // Production optimizations
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+        runtimeChunk: 'single',
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Common chunk
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      }
+    }
+    return config
+  },
+  
+  // Headers for better caching control - prevent HTML caching
   async headers() {
     return [
       {
@@ -54,6 +110,19 @@ const nextConfig = {
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          // Prevent HTML page caching
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate, max-age=0',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },
@@ -80,7 +149,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400', // 1 day
+            value: 'public, max-age=86400', // 1 day for static assets only
           },
         ],
       },

@@ -8,26 +8,25 @@ const OnboardingModal = ({ isOpen, onClose, user }) => {
   const steps = [
     {
       title: "Welcome to ChurchContentAI!",
-      content: "Let's take a quick tour to help you get started with your AI ministry assistant.",
+      content: "You understand the Bible. We help you structure it, apply it, and communicate it clearly to your people. Let's get started.",
       icon: "👋",
       action: "Get Started"
     },
     {
-      title: "See It In Action",
-      content: "Watch how Pastor Sarah creates her weekly sermon in just 5 minutes using our AI assistant.",
-      icon: "🎬",
-      action: "Watch Demo",
-      video: true
+      title: "Turn Your Burden Into a Message",
+      content: "Share what God has placed on your heart - a verse, a topic, or a burden. We'll help you structure it, apply it to real life, and communicate it clearly.",
+      icon: "💭",
+      action: "Continue"
     },
     {
-      title: "Create Your First Content",
-      content: "Ready to try it yourself? Let's create your first AI-assisted sermon or Bible study.",
+      title: "Structure, Apply, Communicate",
+      content: "Our AI helps with the three things pastors struggle with most: structuring your message logically, applying biblical truth to real struggles, and communicating clearly.",
       icon: "✨",
       action: "Start Creating"
     },
     {
-      title: "You're All Set!",
-      content: "You now have everything you need to enhance your ministry with AI assistance. Remember: AI supports your calling, it doesn't replace it.",
+      title: "You're Ready!",
+      content: "Remember: You understand the Bible. We're here to help you structure, apply, and communicate it. AI supports your calling - it doesn't replace prayer or discernment.",
       icon: "🎉",
       action: "Start Creating"
     }

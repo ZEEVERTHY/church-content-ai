@@ -61,7 +61,7 @@ const Layout = ({ children, requireAuth = false, showNavigation = true }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {showNavigation && <Navigation user={user} onSignOut={handleSignOut} loading={loading} />}
+      {showNavigation && Navigation && <Navigation user={user} onSignOut={handleSignOut} loading={loading} />}
       <main className={showNavigation ? "pt-16 sm:pt-20" : ""}>
         {children}
       </main>
