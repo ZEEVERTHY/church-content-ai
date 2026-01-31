@@ -46,8 +46,8 @@ const nextConfig = {
   // Experimental features for performance
   experimental: {
     optimizePackageImports: ['@stripe/stripe-js', 'lucide-react', 'next-themes'],
-    // Enable faster refresh
-    optimizeCss: true,
+    // Note: optimizeCss requires 'critters' package - disabled for now
+    // optimizeCss: true,
   },
   
   // Optimize bundle size - remove console in production
